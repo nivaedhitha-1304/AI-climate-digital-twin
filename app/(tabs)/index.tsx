@@ -1,31 +1,69 @@
-import { StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, RefreshControl, View, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS } from '../../src/theme';
+import { PremiumHeader } from '../../src/components/dashboard/PremiumHeader';
+import { HeroWeatherCard } from '../../src/components/dashboard/HeroWeatherCard';
+import { HourlyForecast } from '../../src/components/dashboard/HourlyForecast';
+import { Forecast7Day } from '../../src/components/dashboard/Forecast7Day';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function HomeScreen() {
+  const [refreshing, setRefreshing] = useState(false);
 
-export default function TabOneScreen() {
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate telemetry sensor ping reloading
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
+    <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      
+      {/* Scrollable Dashboard Grid */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
+      >
+        {/* Premium Header */}
+        <PremiumHeader />
+
+        {/* Hero Climate telemetry */}
+        <HeroWeatherCard />
+
+        {/* Hourly Forecast Timeline */}
+        <HourlyForecast />
+
+        {/* 7-Day Forecasting Grid */}
+        <Forecast7Day />
+
+        {/* Bottom spacer to offset floating nav bar capsule */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: COLORS.background,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: COLORS.background,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  bottomSpacer: {
+    height: 100, // Enough height so content doesn't get obscured by the floating capsule navigation
   },
 });

@@ -1,0 +1,16 @@
+export const COLORS = {
+  background: '#F7FAFF',
+  card: '#FFFFFF',
+  primary: '#2563EB',
+  secondary: '#60A5FA',
+  accent: '#38BDF8',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  border: '#E2E8F0',
+  textPrimary: '#1E293B',
+  textSecondary: '#64748B',
+  glassBg: 'rgba(255, 255, 255, 0.75)',
+  glassBorder: 'rgba(255, 255, 255, 0.4)',
+  shadow: 'rgba(37, 99, 235, 0.08)',
+};
