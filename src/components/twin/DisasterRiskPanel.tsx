@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, useWindowDimensions } from 'react-native';
-import { AlertTriangle, ShieldAlert, Sparkles, Navigation, Clock } from 'lucide-react-native';
+import { ShieldAlert } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 import { GlassCard } from '../common/GlassCard';
 import { DistrictClimateData } from '../../mock/climateMock';
-import { AnimatedNumber } from '../common/AnimatedNumber';
 import { TimeHorizon } from './TimelineScrubber';
+import { TrafficLightBadge, RiskSeverity } from '../common/TrafficLightBadge';
+import { RiskCard, DriverFactor } from '../common/RiskCard';
 
 interface DisasterRiskPanelProps {
   district: DistrictClimateData;
@@ -19,18 +20,118 @@ interface RiskItem {
   key: keyof DistrictClimateData['disasterRisks'];
   expectedTime: string;
   action: string;
+  drivers: DriverFactor[];
 }
 
 const RISKS_SPEC: RiskItem[] = [
-  { id: 'fld', name: 'Flash Flood', key: 'flood', expectedTime: '12 Hours', action: 'Evacuate low basins and drainage channels.' },
-  { id: 'cyc', name: 'Cyclone Landfall', key: 'cyclone', expectedTime: '36 Hours', action: 'Move to cyclone shelters; secure wind panes.' },
-  { id: 'htw', name: 'Thermal Heatwave', key: 'heatwave', expectedTime: '24 Hours', action: 'Limit outdoor labor; set up hydration nodes.' },
-  { id: 'hrn', name: 'Heavy Rainfall', key: 'heavyRain', expectedTime: '6 Hours', action: 'Alert municipal pumping units; check blockages.' },
-  { id: 'lsl', name: 'Saturated Landslide', key: 'landslide', expectedTime: '8 Hours', action: 'Cease travel on ghat roads; secure slope barriers.' },
-  { id: 'drg', name: 'Agricultural Drought', key: 'drought', expectedTime: '15 Days', action: 'Implement alternate day agricultural irrigation.' },
-  { id: 'wfr', name: 'Wildfire hazard', key: 'wildfire', expectedTime: '3 Days', action: 'Create dry fire breaks; restrict forest access.' },
-  { id: 'ssg', name: 'Storm Surge', key: 'stormSurge', expectedTime: '18 Hours', action: 'Cease coastal marine activities; move craft inland.' },
-  { id: 'cfl', name: 'Coastal Flooding', key: 'coastalFlood', expectedTime: '12 Hours', action: 'Evacuate beach-front corridors; check harbor buffers.' },
+  { 
+    id: 'fld', 
+    name: 'Flash Flood', 
+    key: 'flood', 
+    expectedTime: '12 Hours', 
+    action: 'Evacuate low basins and drainage channels.',
+    drivers: [
+      { name: 'Torrential Precipitation Rate', weight: 'High', icon: '🌧️' },
+      { name: 'Catchment Soil Saturation', weight: 'High', icon: '💧' },
+      { name: 'River Basin Runoff Index', weight: 'Medium', icon: '🌊' },
+      { name: 'Urban Drain Blockage Code', weight: 'Low', icon: '🚧' }
+    ]
+  },
+  { 
+    id: 'cyc', 
+    name: 'Cyclone Landfall', 
+    key: 'cyclone', 
+    expectedTime: '36 Hours', 
+    action: 'Move to cyclone shelters; secure wind panes.',
+    drivers: [
+      { name: 'Sea Surface Warming Anomaly', weight: 'High', icon: '🌡️' },
+      { name: 'Deep Atmospheric Low Pressure', weight: 'High', icon: '🌀' },
+      { name: 'Tropospheric Wind Shear Velocity', weight: 'Medium', icon: '💨' }
+    ]
+  },
+  { 
+    id: 'htw', 
+    name: 'Thermal Heatwave', 
+    key: 'heatwave', 
+    expectedTime: '24 Hours', 
+    action: 'Limit outdoor labor; set up hydration nodes.',
+    drivers: [
+      { name: 'Extreme Solar Irradiance Peak', weight: 'High', icon: '☀️' },
+      { name: 'Anticyclonic Air Mass Blockage', weight: 'Medium', icon: '🥵' },
+      { name: 'Critical Canopy Evapotranspiration', weight: 'Low', icon: '🌱' }
+    ]
+  },
+  { 
+    id: 'hrn', 
+    name: 'Heavy Rainfall', 
+    key: 'heavyRain', 
+    expectedTime: '6 Hours', 
+    action: 'Alert municipal pumping units; check blockages.',
+    drivers: [
+      { name: 'Convective Cloud Vapor Density', weight: 'High', icon: '☁️' },
+      { name: 'Monsoonal Wind Ingress Vector', weight: 'Medium', icon: '💨' }
+    ]
+  },
+  { 
+    id: 'lsl', 
+    name: 'Saturated Landslide', 
+    key: 'landslide', 
+    expectedTime: '8 Hours', 
+    action: 'Cease travel on ghat roads; secure slope barriers.',
+    drivers: [
+      { name: 'Ghat Terrain Soil Saturation', weight: 'High', icon: '⛰️' },
+      { name: 'Slope Shear Gravitational Load', weight: 'Medium', icon: '📉' },
+      { name: 'Runoff Erosion Coefficient', weight: 'Low', icon: '🌊' }
+    ]
+  },
+  { 
+    id: 'drg', 
+    name: 'Agricultural Drought', 
+    key: 'drought', 
+    expectedTime: '15 Days', 
+    action: 'Implement alternate day agricultural irrigation.',
+    drivers: [
+      { name: 'Extreme Soil Moisture Deficit', weight: 'High', icon: '🌾' },
+      { name: 'Prolonged Rainfall Deficit Days', weight: 'High', icon: '☀️' },
+      { name: 'Water Table Drawdown Depth', weight: 'Medium', icon: '🕳️' }
+    ]
+  },
+  { 
+    id: 'wfr', 
+    name: 'Wildfire hazard', 
+    key: 'wildfire', 
+    expectedTime: '3 Days', 
+    action: 'Create dry fire breaks; restrict forest access.',
+    drivers: [
+      { name: 'Dead Biomass Moisture Deficit', weight: 'High', icon: '🍂' },
+      { name: 'Extreme Ambient Temperature Index', weight: 'High', icon: '🔥' },
+      { name: 'High Atmospheric Wind Flow Velocity', weight: 'Medium', icon: '💨' }
+    ]
+  },
+  { 
+    id: 'ssg', 
+    name: 'Storm Surge', 
+    key: 'stormSurge', 
+    expectedTime: '18 Hours', 
+    action: 'Cease coastal marine activities; move craft inland.',
+    drivers: [
+      { name: 'Offshore Gale Wind Shear force', weight: 'High', icon: '💨' },
+      { name: 'Astronomical High Tide Deviation', weight: 'Medium', icon: '📈' },
+      { name: 'Coastal Contour Ingress Slope', weight: 'Low', icon: '🏝️' }
+    ]
+  },
+  { 
+    id: 'cfl', 
+    name: 'Coastal Flooding', 
+    key: 'coastalFlood', 
+    expectedTime: '12 Hours', 
+    action: 'Evacuate beach-front corridors; check harbour buffers.',
+    drivers: [
+      { name: 'Marine Wave Amplitude Index', weight: 'High', icon: '🌊' },
+      { name: 'Sea Level Swell Period Deviation', weight: 'Medium', icon: '📈' },
+      { name: 'Coastal Barrier Inundation Rate', weight: 'Medium', icon: '🏝️' }
+    ]
+  },
 ];
 
 export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
@@ -41,20 +142,6 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
   const { width } = useWindowDimensions();
   const isTablet = width > 768;
   const [activeTab, setActiveTab] = useState<'profile' | 'forecast'>('profile');
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'Extreme':
-        return COLORS.danger;
-      case 'High':
-        return '#EA580C'; // Dark orange
-      case 'Moderate':
-        return COLORS.warning;
-      case 'Low':
-      default:
-        return COLORS.success;
-    }
-  };
 
   // Adjust risks based on time horizon & simulation years
   const getAdjustedRiskVal = (baseRisk: number) => {
@@ -68,8 +155,8 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
     return baseRisk;
   };
 
-  const getSeverity = (risk: number) => {
-    if (risk > 75) return 'Extreme';
+  const getSeverity = (risk: number): RiskSeverity => {
+    if (risk > 75) return 'Severe';
     if (risk > 45) return 'High';
     if (risk > 20) return 'Moderate';
     return 'Low';
@@ -95,7 +182,7 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
             style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
           >
             <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]} numberOfLines={0}>
-              Active Risk Indexes
+              Traffic Light Risk Profiles
             </Text>
           </Pressable>
           
@@ -104,26 +191,25 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
             style={[styles.tab, activeTab === 'forecast' && styles.activeTab]}
           >
             <Text style={[styles.tabText, activeTab === 'forecast' && styles.activeTabText]} numberOfLines={0}>
-              Multi-Hazard Predictions
+              Explainable AI Drivers
             </Text>
           </Pressable>
         </View>
 
         {activeTab === 'profile' ? (
-          /* Profile Mode */
+          /* Profile Mode: Replace percentages/bars with badges */
           <View style={styles.content}>
             <Text style={styles.panelTitle} numberOfLines={0}>
-              Active Hazard Probabilities
+              Vulnerability Risk Matrices
             </Text>
             
             <View style={styles.riskList}>
               {visibleRisks.map((spec) => {
                 const riskData = district.disasterRisks[spec.key];
-                if (!riskData) return null; // Safe fallback for missing fields
+                if (!riskData) return null;
 
                 const riskVal = getAdjustedRiskVal(riskData.risk);
                 const currentSev = getSeverity(riskVal);
-                const sevColor = getSeverityColor(currentSev);
                 
                 return (
                   <View key={spec.id} style={styles.riskRow}>
@@ -131,39 +217,27 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
                       <Text style={styles.riskName} numberOfLines={0}>
                         {spec.name}
                       </Text>
-                      <View style={styles.badgeRow}>
-                        <Text style={[styles.sevText, { color: sevColor }]} numberOfLines={0}>
-                          {currentSev.toUpperCase()}
-                        </Text>
-                        <Text style={styles.dotSeparator}>•</Text>
-                        <Text style={styles.confText} numberOfLines={0}>
-                          {riskData.confidence}% Conf
-                        </Text>
-                      </View>
+                      <Text style={styles.confText} numberOfLines={0}>
+                        AI Model Confidence: {riskData.confidence}%
+                      </Text>
                     </View>
 
-                    <View style={styles.barColumn}>
-                      <AnimatedNumber value={riskVal} style={[styles.riskPercent, { color: sevColor }]} suffix="%" />
-                      <View style={styles.track}>
-                        <View style={[styles.bar, { width: `${riskVal}%`, backgroundColor: sevColor }]} />
-                      </View>
-                    </View>
+                    <TrafficLightBadge severity={currentSev} />
                   </View>
                 );
               })}
             </View>
           </View>
         ) : (
-          /* Forecast predictions Mode */
+          /* Forecast/Explainable AI Mode using RiskCard */
           <View style={styles.content}>
             <Text style={styles.panelTitle} numberOfLines={0}>
-              Multi-Disaster Threat Matrices
+              Multi-Disaster Explainable Diagnostics
             </Text>
             
             <ScrollView 
-              horizontal={isTablet} 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={isTablet ? styles.scrollContentTablet : styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
             >
               {visibleRisks.map((spec) => {
                 const riskData = district.disasterRisks[spec.key];
@@ -171,41 +245,21 @@ export const DisasterRiskPanel: React.FC<DisasterRiskPanelProps> = ({
 
                 const riskVal = getAdjustedRiskVal(riskData.risk);
                 
-                // Only show forecast cards for non-zero risk factors
+                // Only show cards for non-zero risk factors
                 if (riskVal < 10) return null;
                 
                 const currentSev = getSeverity(riskVal);
-                const sevColor = getSeverityColor(currentSev);
 
                 return (
-                  <View key={`forecast-${spec.id}`} style={[styles.forecastCard, isTablet && styles.forecastCardTablet]}>
-                    <View style={styles.forecastHeader}>
-                      <View style={styles.forecastTitleRow}>
-                        <AlertTriangle size={16} color={sevColor} style={styles.alertIcon} />
-                        <Text style={styles.forecastName} numberOfLines={0}>
-                          {spec.name}
-                        </Text>
-                      </View>
-                      <Text style={[styles.forecastSev, { color: sevColor, borderColor: sevColor }]} numberOfLines={0}>
-                        {riskVal}% RISK
-                      </Text>
-                    </View>
-
-                    <View style={styles.timeExpectedRow}>
-                      <Clock size={12} color={COLORS.textSecondary} />
-                      <Text style={styles.timeExpectedText} numberOfLines={0}>
-                        Anticipated: <Text style={styles.boldText}>{spec.expectedTime}</Text>
-                      </Text>
-                    </View>
-
-                    <Text style={styles.forecastActionLabel} numberOfLines={0}>AI CLIMATE ADVISORY DIRECTIVE:</Text>
-                    <View style={styles.actionBody}>
-                      <Navigation size={12} color={COLORS.textSecondary} style={styles.bullet} />
-                      <Text style={styles.forecastActionText} numberOfLines={0}>
-                        {spec.action}
-                      </Text>
-                    </View>
-                  </View>
+                  <RiskCard
+                    key={`risk-card-${spec.id}`}
+                    riskName={spec.name}
+                    riskValue={riskVal}
+                    severity={currentSev}
+                    confidence={riskData.confidence}
+                    expectedTime={spec.expectedTime}
+                    drivers={spec.drivers}
+                  />
                 );
               })}
             </ScrollView>
@@ -275,6 +329,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
   },
   rowLabel: {
     flex: 1,
@@ -286,136 +343,14 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.weights.bold,
     color: COLORS.textPrimary,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  sevText: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 8,
-    fontWeight: TYPOGRAPHY.weights.heavy,
-  },
-  dotSeparator: {
-    marginHorizontal: 6,
-    color: COLORS.border,
-    fontSize: 8,
-  },
   confText: {
     fontFamily: TYPOGRAPHY.fontFamily,
     fontSize: 8,
     fontWeight: TYPOGRAPHY.weights.semibold,
     color: COLORS.textSecondary,
-  },
-  barColumn: {
-    width: 120,
-    alignItems: 'flex-end',
-  },
-  riskPercent: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: TYPOGRAPHY.sizes.xs,
-    fontWeight: TYPOGRAPHY.weights.bold,
-    marginBottom: 4,
-  },
-  track: {
-    width: '100%',
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.border,
-    position: 'relative',
-  },
-  bar: {
-    position: 'absolute',
-    height: '100%',
-    borderRadius: 2,
+    marginTop: 2,
   },
   scrollContent: {
     gap: SPACING.cardToCard,
-  },
-  scrollContentTablet: {
-    flexDirection: 'row',
-    gap: SPACING.cardToCard,
-  },
-  forecastCard: {
-    backgroundColor: COLORS.background,
-    borderRadius: SPACING.borderRadiusMd,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.md,
-  },
-  forecastCardTablet: {
-    width: 260,
-    marginBottom: 0,
-  },
-  forecastHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  forecastTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  alertIcon: {
-    marginTop: -1,
-  },
-  forecastName: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: TYPOGRAPHY.sizes.xs,
-    fontWeight: TYPOGRAPHY.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  forecastSev: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 8,
-    fontWeight: TYPOGRAPHY.weights.heavy,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  timeExpectedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: SPACING.sm,
-  },
-  timeExpectedText: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 9,
-    fontWeight: TYPOGRAPHY.weights.medium,
-    color: COLORS.textSecondary,
-  },
-  boldText: {
-    fontWeight: TYPOGRAPHY.weights.semibold,
-    color: COLORS.textPrimary,
-  },
-  forecastActionLabel: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 8,
-    fontWeight: TYPOGRAPHY.weights.heavy,
-    color: COLORS.primary,
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  actionBody: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-  },
-  bullet: {
-    marginTop: 2,
-    transform: [{ rotate: '90deg' }],
-  },
-  forecastActionText: {
-    flex: 1,
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 9,
-    fontWeight: TYPOGRAPHY.weights.medium,
-    color: COLORS.textSecondary,
-    lineHeight: 12,
   },
 });

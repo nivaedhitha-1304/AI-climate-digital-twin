@@ -761,15 +761,38 @@ export const AI_CHAT_RESPONSES: Record<string, string> = {
     'Air quality is excellent across the Western Ghats (Nilgiris AQI 22, Coimbatore 45). The coastal belt is moderate (Chennai AQI 94). However, northern industrial pockets (Vellore AQI 112) show elevated particulate matter due to high heat and stagnant air currents.',
   
   'suggest emergency actions for nilgiris.':
-    'For Nilgiris district, the AI Climate Engine advises:\n• Cease all non-essential road travel along the ghat paths immediately due to high Landslide probability (90%).\n• Evacuate low-lying river areas as soil saturation (92%) limits further absorption.\n• Activate regional relief nodes and disaster response units.'
+    'For Nilgiris district, the AI Climate Engine advises:\n• Cease all non-essential road travel along the ghat paths immediately due to high Landslide probability (90%).\n• Evacuate low-lying river areas as soil saturation (92%) limits further absorption.\n• Activate regional relief nodes and disaster response units.',
+
+  'will it rain tomorrow?':
+    'Atmospheric precipitation models indicate moderate monsoonal rain activity in the Western Ghats (Coimbatore, Nilgiris) tomorrow with accumulated values around 15-25mm. Coastal regions like Chennai have a low drizzle probability (15%), while the southern tip will see scattered showers.',
+
+  'flood risk in chennai':
+    'Chennai flood risk index is currently **Moderate (45%)** based on recent radar feedback. Heavy rainfall is predicted over the next 48 hours (accumulating 35mm), raising convective runoff coefficients. Municipal drainage systems are running at 68% capacity.',
+
+  'best crop for thanjavur':
+    'For **Thanjavur**, the AI Climate Engine registers **Paddy Rice** as the optimal crop choice with an **88% match coefficient**. This matches the current Kharif season soil moisture (58%) and water table levels (7.1m drawdown). Alternative: Sugarcane (72% match).',
+
+  'safe fishing today?':
+    'Sailing safety clearance across coastal hubs is mixed:\n• **Thoothukudi**: EXCELLENT. Wave heights below 1.2m, wind speed 16 km/h. Safe to sail.\n• **Chennai**: RESTRICTED. Waves at 2.2m with strong wind currents. Caution is advised.\n• **Nagapattinam**: SUSPENDED. Severe storm surge alert active. Do not sail.',
+
+  'cyclone prediction':
+    'Deep depression modeling in the Bay of Bengal shows a 90% probability of tropical storm ingress. Landfall coordinates are projecting near **Nagapattinam** within 36 hours. Maximum wind vectors are estimated at 110 km/h.',
+
+  'heatwave advice':
+    'Northern interior districts (Vellore, Ranipet) are under heatwave warning thresholds with ambient temps hitting 41-43°C. AI advice: Limit direct exposure between 11 AM - 4 PM. Active hydration protocols should be activated for field laborers.',
+
+  'marine conditions today':
+    'Statewide marine sensors show sea surface temperatures averaging 29.4°C. Wave swell amplitudes are moderate at 1.4m. Wind currents are coming from the North-East at 24 km/h. Coastal flooding indices are stable except in active depression zones.'
 };
 
 export const SUGGESTED_PROMPTS = [
-  'What is the current climate state of Tamil Nadu?',
-  'Are there any active disaster warnings?',
-  'Tell me about soil moisture levels.',
-  'How does the air quality look?',
-  'Suggest emergency actions for Nilgiris.',
+  'Will it rain tomorrow?',
+  'Flood risk in Chennai',
+  'Best crop for Thanjavur',
+  'Safe fishing today?',
+  'Cyclone prediction',
+  'Heatwave advice',
+  'Marine conditions today',
 ];
 
 export const ANALYTICS_DATA = {

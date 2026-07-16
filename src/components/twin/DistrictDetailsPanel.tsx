@@ -5,14 +5,11 @@ import {
   Droplet, 
   Wind, 
   Eye, 
-  Activity, 
-  ShieldAlert, 
   Compass, 
   Sun,
-  Database,
   Cpu,
-  Anchor,
   Info,
+  ShieldAlert,
   Zap,
   TrendingUp
 } from 'lucide-react-native';
@@ -22,6 +19,9 @@ import { AnimatedNumber } from '../common/AnimatedNumber';
 import { StatusBadge } from '../common/StatusBadge';
 import { DistrictClimateData } from '../../mock/climateMock';
 import { TimeHorizon } from './TimelineScrubber';
+import { RecommendationCard, RecommendationPriority } from '../common/RecommendationCard';
+import { ChecklistCard } from '../common/ChecklistCard';
+import { MarineCard } from '../common/MarineCard';
 
 interface DistrictDetailsPanelProps {
   district: DistrictClimateData;
@@ -37,7 +37,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
   const { width } = useWindowDimensions();
   const isTablet = width > 768;
 
-  // 1. Calculate values based on time horizon & research mode simulation years
+  // 1. Calculate values based on time horizon & simulation years
   let temp = district.temperature;
   let feelsLike = district.feelsLike;
   let humidity = district.humidity;
@@ -159,6 +159,124 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
   const aiInsights = getAIInsights();
   const isCoastal = district.region === 'Coastal';
 
+  // Generate Smart Advisory Cards based on District telemetry
+  const getSmartAdvisories = () => {
+    const advisories = [];
+    
+    if (rainfall > 8) {
+      advisories.push({
+        title: 'Rain Expected',
+        description: `Heavy precipitation of ${rainfall.toFixed(1)}mm expected. Secure stormwater paths.`,
+        type: 'rain' as const,
+        priority: 'High' as const,
+      });
+      advisories.push({
+        title: 'Delay Irrigation',
+        description: 'Sufficient moisture inflow predicted. Halt irrigation to preserve soil aeration.',
+        type: 'irrigation' as const,
+        priority: 'Moderate' as const,
+      });
+    } else if (district.soilMoisture < 35) {
+      advisories.push({
+        title: 'Irrigation Action Required',
+        description: `Soil moisture drops to ${district.soilMoisture}%. Drip irrigation advised for local crops.`,
+        type: 'irrigation' as const,
+        priority: 'Moderate' as const,
+      });
+    }
+
+    if (temp > 35) {
+      advisories.push({
+        title: 'Avoid Outdoor Work',
+        description: `Extreme heat advisory (${temp.toFixed(1)}°C). Limit labor between 11:00 AM and 04:00 PM.`,
+        type: 'work' as const,
+        priority: 'Severe' as const,
+      });
+    }
+
+    if (district.windSpeed > 22) {
+      advisories.push({
+        title: 'High Winds Warning',
+        description: `Wind gusts up to ${district.windSpeed} km/h. Secure loose outdoor panels or antennas.`,
+        type: 'wind' as const,
+        priority: 'Moderate' as const,
+      });
+    }
+
+    if (isCoastal) {
+      const waveHt = district.marineIntelligence?.waveHeight || 1.0;
+      if (waveHt > 1.8) {
+        advisories.push({
+          title: 'Unsuitable Fishing Window',
+          description: `Dangerous ocean swell heights of ${waveHt.toFixed(1)}m. Secure vessels inland.`,
+          type: 'fishing' as const,
+          priority: 'Severe' as const,
+        });
+      } else {
+        advisories.push({
+          title: 'Suitable Fishing Window',
+          description: 'Stable wave contours below 1.5m. Safe navigation clearance in effect.',
+          type: 'fishing' as const,
+          priority: 'Low' as const,
+        });
+      }
+    }
+
+    // Default fallback advisory if list is empty
+    if (advisories.length === 0) {
+      advisories.push({
+        title: 'Standard Monitoring',
+        description: 'Environmental parameters matching stable baselines. Maintain routine telemetry checks.',
+        type: 'general' as const,
+        priority: 'Low' as const,
+      });
+    }
+
+    return advisories;
+  };
+
+  // Generate Climate Readiness checklists based on risks
+  const getReadinessChecklists = () => {
+    const checklists = [];
+
+    const heavyRainRisk = district.disasterRisks.heavyRain.risk;
+    const floodRisk = district.disasterRisks.flood.risk;
+    const heatwaveRisk = district.disasterRisks.heatwave.risk;
+    const cycloneRisk = district.disasterRisks.cyclone.risk;
+
+    if (heavyRainRisk > 30 || floodRisk > 30 || rainfall > 10) {
+      checklists.push({
+        event: 'Heavy Rain',
+        items: ['Prepare storm drainage channels', 'Avoid flooded road paths', 'Store emergency drinking water'],
+      });
+    }
+    if (cycloneRisk > 30 || (isCoastal && district.marineIntelligence && district.marineIntelligence.waveHeight > 2.0)) {
+      checklists.push({
+        event: 'Cyclone',
+        items: ['Assemble emergency medical kit', 'Charge backup power sources', 'Follow localized evacuation route'],
+      });
+    }
+    if (heatwaveRisk > 30 || temp > 35) {
+      checklists.push({
+        event: 'Heatwave',
+        items: ['Maintain continuous hydration', 'Avoid outdoor noon exposure', 'Monitor livestock heat stress'],
+      });
+    }
+
+    // Ensure we show at least one checklist card
+    if (checklists.length === 0) {
+      checklists.push({
+        event: 'General Hazard',
+        items: ['Sync telemetry GPS links', 'Verify municipal response channels', 'Track Doppler satellite updates'],
+      });
+    }
+
+    return checklists;
+  };
+
+  const smartAdvisories = getSmartAdvisories();
+  const readinessChecklists = getReadinessChecklists();
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* 1. Main Telemetry Dashboard */}
@@ -279,12 +397,52 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         </View>
       </GlassCard>
 
-      {/* 2. AI Climate Insights Card */}
+      {/* 2. Premium Marine Intelligence (Coastal Districts Only) */}
+      {isCoastal && district.marineIntelligence && (
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle} numberOfLines={0}>MARINE INTELLIGENCE</Text>
+          <MarineCard 
+            districtName={district.name} 
+            marineData={{
+              ...district.marineIntelligence,
+              stormSurgeRisk: district.marineIntelligence.stormSurgeRisk as any
+            }} 
+          />
+        </View>
+      )}
+
+      {/* 3. District Smart Advisory Section */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle} numberOfLines={0}>DISTRICT SMART ADVISORY</Text>
+        {smartAdvisories.map((adv, idx) => (
+          <RecommendationCard
+            key={`adv-${idx}`}
+            title={adv.title}
+            description={adv.description}
+            type={adv.type}
+            priority={adv.priority}
+          />
+        ))}
+      </View>
+
+      {/* 4. Climate Readiness Checklist Cards */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle} numberOfLines={0}>CLIMATE READINESS PLAN</Text>
+        {readinessChecklists.map((chk, idx) => (
+          <ChecklistCard
+            key={`chk-${idx}`}
+            event={chk.event}
+            items={chk.items}
+          />
+        ))}
+      </View>
+
+      {/* 5. AI Climate Insights Card */}
       <GlassCard style={styles.aiInsightsCard}>
         <View style={styles.cardHeader}>
           <Cpu size={16} color={COLORS.primary} />
           <Text style={styles.cardHeaderTitle} numberOfLines={0}>
-            AI CLIMATE INSIGHTS
+            AI MODEL EXPLANATORY REASONINGS
           </Text>
         </View>
 
@@ -319,74 +477,10 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         </View>
 
         <View style={styles.confidenceRow}>
-          <Text style={styles.confidenceLabel} numberOfLines={0}>Prediction Confidence:</Text>
+          <Text style={styles.confidenceLabel} numberOfLines={0}>AI Prediction Confidence:</Text>
           <Text style={styles.confidenceVal} numberOfLines={0}>{predictionConfidence}% Conf</Text>
         </View>
       </GlassCard>
-
-      {/* 3. Marine Intelligence (Coastal Districts Only) */}
-      {isCoastal && district.marineIntelligence && (
-        <GlassCard style={styles.marineCard}>
-          <View style={styles.cardHeader}>
-            <Anchor size={16} color={COLORS.primary} />
-            <Text style={styles.cardHeaderTitle} numberOfLines={0}>
-              MARINE INTELLIGENCE
-            </Text>
-            <StatusBadge type="info" label="Coastal Data" />
-          </View>
-
-          <View style={styles.marineGrid}>
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Sea Surface Temp</Text>
-              <Text style={styles.marineValue} numberOfLines={0}>
-                {district.marineIntelligence.seaSurfaceTemp.toFixed(1)}°C
-              </Text>
-            </View>
-
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Significant Wave Ht</Text>
-              <Text style={styles.marineValue} numberOfLines={0}>
-                {district.marineIntelligence.waveHeight.toFixed(1)} m
-              </Text>
-            </View>
-
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Ocean Current Speed</Text>
-              <Text style={styles.marineValue} numberOfLines={0}>
-                {district.marineIntelligence.oceanCurrent}
-              </Text>
-            </View>
-
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Tidal Level Offset</Text>
-              <Text style={styles.marineValue} numberOfLines={0}>
-                +{district.marineIntelligence.tideLevel.toFixed(2)} m
-              </Text>
-            </View>
-
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Coastal Wind Speed</Text>
-              <Text style={styles.marineValue} numberOfLines={0}>
-                {district.marineIntelligence.coastalWind}
-              </Text>
-            </View>
-
-            <View style={styles.marineItem}>
-              <Text style={styles.marineLabel} numberOfLines={0}>Storm Surge Severity</Text>
-              <Text style={[styles.marineValue, { color: COLORS.warning }]} numberOfLines={0}>
-                {district.marineIntelligence.stormSurgeRisk} Risk
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.marineAdvisoryBox}>
-            <Text style={styles.advisoryTitle} numberOfLines={0}>MARINE SECTOR ADVISORY</Text>
-            <Text style={styles.advisoryBody} numberOfLines={0}>
-              {district.marineIntelligence.marineAdvisory}
-            </Text>
-          </View>
-        </GlassCard>
-      )}
 
       {/* Spacing for Tab Capsule scroll safety */}
       <View style={{ height: 40 }} />
@@ -554,6 +648,9 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.weights.bold,
     color: COLORS.textPrimary,
   },
+  sectionContainer: {
+    marginBottom: SPACING.md,
+  },
   aiInsightsCard: {
     backgroundColor: 'rgba(37, 99, 235, 0.02)',
     borderColor: 'rgba(37, 99, 235, 0.08)',
@@ -620,60 +717,5 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: TYPOGRAPHY.weights.bold,
     color: COLORS.primary,
-  },
-  marineCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderRadius: SPACING.borderRadiusLg,
-  },
-  marineGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-  marineItem: {
-    width: '48%',
-    backgroundColor: '#F8FAFC',
-    padding: SPACING.sm,
-    borderRadius: 8,
-  },
-  marineLabel: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 8,
-    fontWeight: TYPOGRAPHY.weights.bold,
-    color: COLORS.textSecondary,
-  },
-  marineValue: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 10,
-    fontWeight: TYPOGRAPHY.weights.bold,
-    color: COLORS.textPrimary,
-    marginTop: 2,
-  },
-  marineAdvisoryBox: {
-    marginTop: SPACING.sm,
-    backgroundColor: 'rgba(56, 189, 248, 0.05)',
-    padding: SPACING.sm,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.accent,
-  },
-  advisoryTitle: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 8,
-    fontWeight: TYPOGRAPHY.weights.heavy,
-    color: COLORS.textPrimary,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  advisoryBody: {
-    fontFamily: TYPOGRAPHY.fontFamily,
-    fontSize: 9,
-    fontWeight: TYPOGRAPHY.weights.medium,
-    color: COLORS.textPrimary,
-    lineHeight: 12,
   },
 });
