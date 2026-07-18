@@ -7,8 +7,9 @@ import Animated, {
   useAnimatedStyle, 
   withSpring 
 } from 'react-native-reanimated';
-import { Home, Globe, BarChart2, Cpu, User } from 'lucide-react-native';
+import { CloudSun, Globe, BarChart2, Cpu, User } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
+import { useApp } from '../../context/AppContext';
 
 // Map tab names to corresponding Lucide icons
 const getTabIcon = (name: string, isFocused: boolean) => {
@@ -16,10 +17,10 @@ const getTabIcon = (name: string, isFocused: boolean) => {
   const size = 22;
 
   switch (name) {
-    case 'index':
-      return <Home size={size} color={color} />;
     case 'twin':
       return <Globe size={size} color={color} />;
+    case 'index':
+      return <CloudSun size={size} color={color} />;
     case 'analytics':
       return <BarChart2 size={size} color={color} />;
     case 'assistant':
@@ -27,24 +28,7 @@ const getTabIcon = (name: string, isFocused: boolean) => {
     case 'profile':
       return <User size={size} color={color} />;
     default:
-      return <Home size={size} color={color} />;
-  }
-};
-
-const getTabLabel = (name: string) => {
-  switch (name) {
-    case 'index':
-      return 'Home';
-    case 'twin':
-      return 'Twin';
-    case 'analytics':
-      return 'Analytics';
-    case 'assistant':
-      return 'AI';
-    case 'profile':
-      return 'Profile';
-    default:
-      return '';
+      return <CloudSun size={size} color={color} />;
   }
 };
 
@@ -55,6 +39,7 @@ interface TabButtonProps {
 }
 
 const TabButton: React.FC<TabButtonProps> = ({ name, isFocused, onPress }) => {
+  const { t } = useApp();
   const scale = useSharedValue(1);
   const dotScale = useSharedValue(0);
 
@@ -88,7 +73,7 @@ const TabButton: React.FC<TabButtonProps> = ({ name, isFocused, onPress }) => {
         ]}
         numberOfLines={0}
       >
-        {getTabLabel(name)}
+        {t(`tab.${name}`)}
       </Text>
       
       {/* Animated active indicator dot */}

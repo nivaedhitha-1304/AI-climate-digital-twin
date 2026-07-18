@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { Layers, HelpCircle, Activity } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 import { GlassCard } from '../common/GlassCard';
+import { useApp } from '../../context/AppContext';
 
 interface LayerSelectorProps {
   activeLayers: string[];
@@ -20,15 +21,15 @@ interface LayerItem {
 }
 
 interface LayerCategory {
-  id: 'atmospheric' | 'marine' | 'hazards' | 'prediction';
+  id: 'Climate' | 'Marine' | 'Hazards' | 'Environment';
   name: string;
   items: LayerItem[];
 }
 
 const CATEGORIZED_LAYERS: LayerCategory[] = [
   {
-    id: 'atmospheric',
-    name: 'Atmospheric',
+    id: 'Climate',
+    name: 'Climate',
     items: [
       {
         id: 'temp',
@@ -44,7 +45,7 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
         id: 'rain',
         name: 'Rainfall',
         icon: '🌧️',
-        desc: 'Precipitation volume maps dynamically updating based on Doppler feedback.',
+        desc: 'Precipitation volume maps dynamically updating based on radar feedback.',
         legend: {
           colors: ['#93C5FD', COLORS.secondary, COLORS.primary, '#1D4ED8'],
           labels: ['Drizzle', 'Moderate', 'Heavy', 'Torrential'],
@@ -61,8 +62,18 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
         },
       },
       {
+        id: 'pressure',
+        name: 'Pressure',
+        icon: '⏲️',
+        desc: 'Atmospheric barometric pressure systems.',
+        legend: {
+          colors: ['#F8FAFC', '#E2E8F0', '#94A3B8', '#334155'],
+          labels: ['Low (995hPa)', 'Normal', 'High (1015hPa)'],
+        },
+      },
+      {
         id: 'wind',
-        name: 'Wind Flow',
+        name: 'Wind',
         icon: '💨',
         desc: 'Vector velocities and direction vectors of wind currents.',
         legend: {
@@ -72,7 +83,7 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
       },
       {
         id: 'aqi',
-        name: 'Air Quality (AQI)',
+        name: 'AQI',
         icon: '🌫️',
         desc: 'Concentrations of PM2.5 and primary pollutants.',
         legend: {
@@ -80,11 +91,21 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
           labels: ['Good (<50)', 'Moderate', 'Unhealthy (>100)'],
         },
       },
+      {
+        id: 'uv',
+        name: 'UV Index',
+        icon: '☀️',
+        desc: 'Solar ultraviolet radiation intensity index.',
+        legend: {
+          colors: [COLORS.success, COLORS.warning, COLORS.danger, '#991B1B'],
+          labels: ['Low (0-2)', 'Moderate', 'Very High', 'Extreme (11+)'],
+        },
+      },
     ],
   },
   {
-    id: 'marine',
-    name: 'Marine Intel',
+    id: 'Marine',
+    name: 'Marine',
     items: [
       {
         id: 'sst',
@@ -137,18 +158,8 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
         },
       },
       {
-        id: 'cycloneTrack',
-        name: 'Cyclone Track',
-        icon: '🌀',
-        desc: 'Bay of Bengal tropical cyclone storm center tracking projection.',
-        legend: {
-          colors: [COLORS.success, COLORS.warning, COLORS.danger],
-          labels: ['Potential', 'Active Depr', 'Landfall Path'],
-        },
-      },
-      {
         id: 'stormSurge',
-        name: 'Storm Surge Risk',
+        name: 'Storm Surge',
         icon: '🌪️',
         desc: 'Predicted marine volume lift above tidal baselines.',
         legend: {
@@ -158,7 +169,7 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
       },
       {
         id: 'coastalFlood',
-        name: 'Coastal Flood Risk',
+        name: 'Coastal Flood',
         icon: '🏝️',
         desc: 'Susceptibility models of beach-head inundation.',
         legend: {
@@ -169,13 +180,13 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
     ],
   },
   {
-    id: 'hazards',
+    id: 'Hazards',
     name: 'Hazards',
     items: [
       {
         id: 'flood',
         name: 'Flood Risk',
-        icon: '🌧️',
+        icon: '🌊',
         desc: 'Hydrological runoff overflow risks for interior basins.',
         legend: {
           colors: [COLORS.success, COLORS.warning, COLORS.danger],
@@ -203,6 +214,16 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
         },
       },
       {
+        id: 'heavyRain',
+        name: 'Heavy Rain Risk',
+        icon: '🌧️',
+        desc: 'Extreme convective downpour probabilities.',
+        legend: {
+          colors: [COLORS.success, COLORS.warning, COLORS.danger],
+          labels: ['Light', 'Moderate', 'Severe Downpour'],
+        },
+      },
+      {
         id: 'drought',
         name: 'Drought Risk',
         icon: '🌾',
@@ -223,29 +244,49 @@ const CATEGORIZED_LAYERS: LayerCategory[] = [
         },
       },
       {
-        id: 'multiHazard',
-        name: 'Multi-Hazard Risk',
-        icon: '⚠️',
-        desc: 'Compounded risk mapping intersecting heat, flood, and cyclones.',
+        id: 'strongWind',
+        name: 'Strong Wind Risk',
+        icon: '💨',
+        desc: 'Structural gust threats based on high wind velocities.',
         legend: {
-          colors: [COLORS.success, COLORS.warning, '#EA580C', COLORS.danger],
-          labels: ['Low', 'Moderate', 'High', 'Extreme'],
+          colors: [COLORS.success, COLORS.warning, COLORS.danger],
+          labels: ['Safe (<25km/h)', 'Caution', 'Destructive'],
+        },
+      },
+      {
+        id: 'lightning',
+        name: 'Lightning Risk',
+        icon: '⚡',
+        desc: 'Cloud-to-ground flash strike density warnings.',
+        legend: {
+          colors: [COLORS.success, COLORS.warning, COLORS.danger],
+          labels: ['Negligible', 'High Activity', 'Strike Danger'],
         },
       },
     ],
   },
   {
-    id: 'prediction',
-    name: 'Predictions',
+    id: 'Environment',
+    name: 'Environment',
     items: [
       {
-        id: 'futurePredict',
-        name: 'Simulation Forecast',
-        icon: '🔮',
-        desc: 'Simulated anomalies and multi-decadal meteorological projections.',
+        id: 'envHealth',
+        name: 'Environment Health Score',
+        icon: '🏥',
+        desc: 'Aggregated biosphere vitality and ecosystem wellness indices.',
+        legend: {
+          colors: [COLORS.danger, COLORS.warning, COLORS.success],
+          labels: ['Critical (<40)', 'Compromised', 'Vibrant (>85)'],
+        },
+      },
+      {
+        id: 'riskIndex',
+        name: 'Climate Risk Index',
+        icon: '📉',
+        desc: 'Composite risk score representing vulnerability to severe weather events.',
         legend: {
           colors: [COLORS.success, COLORS.warning, COLORS.danger],
-          labels: ['No Anomaly', 'Elevated Risk', 'High Deviation'],
+          labels: ['Stable (<30)', 'Elevated', 'High Exposure (>70)'],
         },
       },
     ],
@@ -258,14 +299,15 @@ export const LayerSelector: React.FC<LayerSelectorProps> = ({
   opacity,
   onChangeOpacity,
 }) => {
-  const [activeCategory, setActiveCategory] = useState<LayerCategory['id']>('atmospheric');
+  const { t } = useApp();
+  const [activeCategory, setActiveCategory] = useState<LayerCategory['id']>('Climate');
 
   const selectedCategory = CATEGORIZED_LAYERS.find((cat) => cat.id === activeCategory) || CATEGORIZED_LAYERS[0];
 
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle} numberOfLines={0}>
-        GIS Climate Layers
+        {t('settings.research')}
       </Text>
       <Text style={styles.sectionSubtitle} numberOfLines={0}>
         Activate multiple telemetry layers to map hazard overlaps
@@ -608,6 +650,10 @@ const styles = StyleSheet.create({
   legendLabelText: {
     fontFamily: TYPOGRAPHY.fontFamily,
     fontSize: 8,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    color: COLORS.textSecondary,
+  },
+});e: 8,
     fontWeight: TYPOGRAPHY.weights.bold,
     color: COLORS.textSecondary,
   },

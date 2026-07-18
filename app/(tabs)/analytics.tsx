@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, StatusBar, Pressable, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -22,12 +22,25 @@ import { ClimateReportCard } from '../../src/components/common/ClimateReportCard
 import { Legend } from '../../src/components/common/Legend';
 import { GlassCard } from '../../src/components/common/GlassCard';
 import { ALL_38_DISTRICTS, ANALYTICS_DATA } from '../../src/mock/climateMock';
+import { useApp } from '../../src/context/AppContext';
 
 export type ClimateRegion = 'All' | 'North' | 'South' | 'West' | 'Coastal';
 type DashboardTab = 'climate' | 'marine' | 'agriculture' | 'fisheries' | 'reports';
 
 export default function AnalyticsScreen() {
+  const { userRole, t } = useApp();
   const [activeTab, setActiveTab] = useState<DashboardTab>('climate');
+
+  // Automatically open relevant top tab based on current user role
+  useEffect(() => {
+    if (userRole === 'Farmer') {
+      setActiveTab('agriculture');
+    } else if (userRole === 'Fisher') {
+      setActiveTab('fisheries');
+    } else {
+      setActiveTab('climate');
+    }
+  }, [userRole]);
 
   // District Comparison selection
   const [compDistrictA, setCompDistrictA] = useState(ALL_38_DISTRICTS[0]); // Chennai
@@ -51,11 +64,11 @@ export default function AnalyticsScreen() {
 
   const renderTabSelector = () => {
     const tabs: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
-      { id: 'climate', label: 'Climate', icon: <Compass size={13} color={activeTab === 'climate' ? '#FFFFFF' : COLORS.textSecondary} /> },
-      { id: 'marine', label: 'Marine', icon: <Waves size={13} color={activeTab === 'marine' ? '#FFFFFF' : COLORS.textSecondary} /> },
-      { id: 'agriculture', label: 'Agriculture', icon: <Sprout size={13} color={activeTab === 'agriculture' ? '#FFFFFF' : COLORS.textSecondary} /> },
-      { id: 'fisheries', label: 'Fisheries', icon: <Anchor size={13} color={activeTab === 'fisheries' ? '#FFFFFF' : COLORS.textSecondary} /> },
-      { id: 'reports', label: 'Reports', icon: <FileText size={13} color={activeTab === 'reports' ? '#FFFFFF' : COLORS.textSecondary} /> },
+      { id: 'climate', label: t('analytics.tab.climate'), icon: <Compass size={13} color={activeTab === 'climate' ? '#FFFFFF' : COLORS.textSecondary} /> },
+      { id: 'marine', label: t('analytics.tab.marine'), icon: <Waves size={13} color={activeTab === 'marine' ? '#FFFFFF' : COLORS.textSecondary} /> },
+      { id: 'agriculture', label: t('analytics.tab.agriculture'), icon: <Sprout size={13} color={activeTab === 'agriculture' ? '#FFFFFF' : COLORS.textSecondary} /> },
+      { id: 'fisheries', label: t('analytics.tab.fisheries'), icon: <Anchor size={13} color={activeTab === 'fisheries' ? '#FFFFFF' : COLORS.textSecondary} /> },
+      { id: 'reports', label: t('analytics.tab.reports'), icon: <FileText size={13} color={activeTab === 'reports' ? '#FFFFFF' : COLORS.textSecondary} /> },
     ];
 
     return (
@@ -454,11 +467,11 @@ export default function AnalyticsScreen() {
         <View style={styles.titleWrapper}>
           <BarChart2 size={22} color={COLORS.primary} />
           <Text style={styles.titleText} numberOfLines={0}>
-            Climate Intelligence Terminal
+            {t('tab.analytics')}
           </Text>
         </View>
         <Text style={styles.subtitleText} numberOfLines={0}>
-          Tabbed diagnostic dashboards for agriculture, marine, and regional safety
+          {t('twin.subtitle')}
         </Text>
       </View>
 

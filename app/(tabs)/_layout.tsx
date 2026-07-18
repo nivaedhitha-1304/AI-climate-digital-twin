@@ -11,15 +11,15 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="twin"
         options={{
-          title: 'Home',
+          title: 'Climate Twin',
         }}
       />
       <Tabs.Screen
-        name="twin"
+        name="index"
         options={{
-          title: 'Twin',
+          title: 'Weather',
         }}
       />
       <Tabs.Screen
@@ -31,7 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="assistant"
         options={{
-          title: 'AI',
+          title: 'AI Assistant',
         }}
       />
       <Tabs.Screen

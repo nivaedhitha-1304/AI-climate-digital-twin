@@ -15,13 +15,25 @@ import {
   Key,
   Database,
   RefreshCw,
-  Info
+  Info,
+  UserCheck
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 import { GlassCard } from '../common/GlassCard';
 import { SectionHeader } from '../common/SectionHeader';
+import { useApp, UserRole } from '../../context/AppContext';
 
 export const SettingsGrid: React.FC = () => {
+  const { 
+    userRole, 
+    setUserRole, 
+    language, 
+    setLanguage, 
+    researchMode, 
+    setResearchMode, 
+    t 
+  } = useApp();
+
   // Settings toggle states
   const [pushAlerts, setPushAlerts] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(false);
@@ -65,6 +77,8 @@ export const SettingsGrid: React.FC = () => {
       setSyncStatus('idle');
     }, 4500);
   };
+
+  const roles: UserRole[] = ['Citizen', 'Farmer', 'Fisher', 'Researcher', 'Government'];
 
   return (
     <View style={styles.container}>
@@ -159,7 +173,32 @@ export const SettingsGrid: React.FC = () => {
         </View>
       </GlassCard>
 
-      {/* 3. Notification telemetry configurations */}
+      {/* 3. User Role Configuration Piles */}
+      <SectionHeader title={t('profile.role')} subtitle="Select role to load specialized intelligence overlays" style={styles.sectionMargin} />
+      <GlassCard style={styles.card}>
+        <View style={styles.roleGrid}>
+          {roles.map((role) => {
+            const isActive = userRole === role;
+            return (
+              <Pressable
+                key={role}
+                onPress={() => setUserRole(role)}
+                style={[
+                  styles.roleBtn,
+                  isActive && styles.roleBtnActive
+                ]}
+              >
+                <UserCheck size={12} color={isActive ? '#FFFFFF' : COLORS.textSecondary} style={{ marginRight: 4 }} />
+                <Text style={[styles.roleBtnText, isActive && styles.roleBtnTextActive]} numberOfLines={1}>
+                  {role}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </GlassCard>
+
+      {/* 4. Notification telemetry configurations */}
       <SectionHeader title="Warning System Alerts" subtitle="Configure real-time warning push protocols" style={styles.sectionMargin} />
       <GlassCard style={styles.card}>
         <View style={styles.itemRow}>
@@ -195,9 +234,25 @@ export const SettingsGrid: React.FC = () => {
         </View>
       </GlassCard>
 
-      {/* 4. System Calibration Settings */}
+      {/* 5. System Calibration Settings */}
       <SectionHeader title="System Calibration" subtitle="Configure interface units and localization" style={styles.sectionMargin} />
       <GlassCard style={styles.card}>
+        <View style={styles.itemRow}>
+          <View style={styles.itemMeta}>
+            <Sliders size={16} color={COLORS.primary} style={styles.itemIcon} />
+            <View style={styles.textCol}>
+              <Text style={styles.itemLabel} numberOfLines={0}>Research Mode</Text>
+              <Text style={styles.itemDesc} numberOfLines={0}>Enables 2030, 2040, 2050 timeline simulations</Text>
+            </View>
+          </View>
+          <Switch
+            value={researchMode}
+            onValueChange={setResearchMode}
+            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
         <View style={styles.itemRow}>
           <View style={styles.itemMeta}>
             <Sliders size={16} color={COLORS.primary} style={styles.itemIcon} />
@@ -221,7 +276,20 @@ export const SettingsGrid: React.FC = () => {
             <Globe size={16} color={COLORS.accent} style={styles.itemIcon} />
             <Text style={styles.itemLabel} numberOfLines={0}>Preferred Language</Text>
           </View>
-          <Text style={styles.valueText} numberOfLines={0}>English (US)</Text>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <Pressable
+              onPress={() => setLanguage('en')}
+              style={[styles.langBtn, language === 'en' && styles.langBtnActive]}
+            >
+              <Text style={[styles.langBtnText, language === 'en' && styles.langBtnTextActive]}>EN</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setLanguage('ta')}
+              style={[styles.langBtn, language === 'ta' && styles.langBtnActive]}
+            >
+              <Text style={[styles.langBtnText, language === 'ta' && styles.langBtnTextActive]}>TA</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.itemRowAlt}>
@@ -233,7 +301,7 @@ export const SettingsGrid: React.FC = () => {
         </View>
       </GlassCard>
 
-      {/* 5. Support and Actions */}
+      {/* 6. Support and Actions */}
       <SectionHeader title="Support & Development" subtitle="About this application" style={styles.sectionMargin} />
       <GlassCard style={styles.card}>
         <View style={styles.itemRow}>
@@ -431,5 +499,54 @@ const styles = StyleSheet.create({
   },
   syncIconAnim: {
     marginRight: 4,
+  },
+  roleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  roleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#FFFFFF',
+  },
+  roleBtnActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  roleBtnText: {
+    fontFamily: TYPOGRAPHY.fontFamily,
+    fontSize: 10,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    color: COLORS.textSecondary,
+  },
+  roleBtnTextActive: {
+    color: '#FFFFFF',
+  },
+  langBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#FFFFFF',
+  },
+  langBtnActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  langBtnText: {
+    fontFamily: TYPOGRAPHY.fontFamily,
+    fontSize: 9,
+    fontWeight: TYPOGRAPHY.weights.heavy,
+    color: COLORS.textSecondary,
+  },
+  langBtnTextActive: {
+    color: '#FFFFFF',
   },
 });

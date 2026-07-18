@@ -165,7 +165,7 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
     const active = activeLayers[0];
 
     // Marine layers don't apply to inland districts (return light neutral grey)
-    const isMarineLayer = ['sst', 'wave', 'oceanCurrent', 'tide', 'coastalWind', 'cycloneTrack', 'stormSurge', 'coastalFlood'].includes(active);
+    const isMarineLayer = ['sst', 'wave', 'oceanCurrent', 'tide', 'coastalWind', 'stormSurge', 'coastalFlood'].includes(active);
     if (isMarineLayer && !isCoastal) {
       return '#E2E8F0'; // Light grey for non-coastal on marine layers
     }
@@ -188,6 +188,12 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
         if (humidity > 60) return COLORS.primary;
         if (humidity > 40) return COLORS.secondary;
         return '#93C5FD';
+
+      case 'pressure':
+        const pr = district.pressure || 1008;
+        if (pr < 1000) return COLORS.danger;
+        if (pr < 1006) return COLORS.warning;
+        return COLORS.primary;
         
       case 'wind':
         if (wind > 40) return COLORS.danger;
@@ -198,6 +204,12 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
       case 'aqi':
         if (aqi > 100) return COLORS.danger;
         if (aqi > 60) return COLORS.warning;
+        return COLORS.success;
+
+      case 'uv':
+        const uvVal = district.uvIndex || 5;
+        if (uvVal > 8) return COLORS.danger;
+        if (uvVal > 5) return COLORS.warning;
         return COLORS.success;
 
       // Marine Layers
@@ -231,9 +243,6 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
         if (cw === 1) return COLORS.warning;
         return COLORS.secondary;
         
-      case 'cycloneTrack':
-        return district.name === 'Nagapattinam' || district.name === 'Chennai' ? COLORS.danger : COLORS.success;
-        
       case 'stormSurge':
         const ss = district.disasterRisks.stormSurge?.risk || 20;
         if (ss > 60) return COLORS.danger;
@@ -264,6 +273,12 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
         if (hw > 70) return COLORS.danger;
         if (hw > 40) return COLORS.warning;
         return COLORS.success;
+
+      case 'heavyRain':
+        const hr = district.disasterRisks.heavyRain?.risk || 20;
+        if (hr > 70) return COLORS.danger;
+        if (hr > 40) return COLORS.warning;
+        return COLORS.success;
         
       case 'drought':
         const dr = district.disasterRisks.drought.risk;
@@ -276,17 +291,30 @@ export const DistrictMap: React.FC<DistrictMapProps> = ({
         if (ls > 70) return COLORS.danger;
         if (ls > 40) return COLORS.warning;
         return COLORS.success;
-        
-      case 'multiHazard':
+
+      case 'strongWind':
+        const sw = district.disasterRisks.storm?.risk || 20;
+        if (sw > 70) return COLORS.danger;
+        if (sw > 40) return COLORS.warning;
+        return COLORS.success;
+
+      case 'lightning':
+        const lt = district.disasterRisks.lightning?.risk || 20;
+        if (lt > 70) return COLORS.danger;
+        if (lt > 40) return COLORS.warning;
+        return COLORS.success;
+
+      // Environment Layers
+      case 'envHealth':
+        const eh = district.environmentalHealthScore || 70;
+        if (eh < 50) return COLORS.danger;
+        if (eh < 75) return COLORS.warning;
+        return COLORS.success;
+
+      case 'riskIndex':
         if (riskIndex > 70) return COLORS.danger;
         if (riskIndex > 45) return '#EA580C';
         if (riskIndex > 25) return COLORS.warning;
-        return COLORS.success;
-
-      // Predictions Layer
-      case 'futurePredict':
-        if (riskIndex > 60) return COLORS.danger;
-        if (riskIndex > 35) return COLORS.warning;
         return COLORS.success;
 
       default:

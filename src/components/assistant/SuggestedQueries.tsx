@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Pressable, useWindowDimensions } from 'react-na
 import { MessageSquare, ArrowRight } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 import { GlassCard } from '../common/GlassCard';
-import { SUGGESTED_PROMPTS } from '../../mock/climateMock';
+import { useApp } from '../../context/AppContext';
 
 interface SuggestedQueriesProps {
   onSelectQuery: (query: string) => void;
@@ -12,18 +12,46 @@ interface SuggestedQueriesProps {
 export const SuggestedQueries: React.FC<SuggestedQueriesProps> = ({ onSelectQuery }) => {
   const { width } = useWindowDimensions();
   const numColumns = width > 768 ? 2 : 1;
+  const { userRole, selectedDistrict, t } = useApp();
+
+  const getSuggestedPrompts = () => {
+    const dstName = selectedDistrict ? selectedDistrict.name : 'Tamil Nadu';
+    
+    if (userRole === 'Farmer') {
+      return [
+        `Query optimal planting window for Paddy Rice in ${dstName}.`,
+        `What is the drought index risk level in ${dstName}?`,
+        `Provide AI farming suggestions for crops in ${dstName}.`
+      ];
+    }
+    if (userRole === 'Fisher') {
+      return [
+        `Show wave swell heights for coastal harbours in ${dstName}.`,
+        `When is the safest fishing window in ${dstName} today?`,
+        `Analyze wind current vectors for coastal sectors.`
+      ];
+    }
+    // Citizen, Government, Researcher
+    return [
+      `What is the environmental health score of ${dstName}?`,
+      `List all active storm surge and cyclone alerts for ${dstName}.`,
+      `Compare ecological parameters across Tamil Nadu.`
+    ];
+  };
+
+  const prompts = getSuggestedPrompts();
 
   return (
     <View style={styles.container}>
       <Text style={styles.headerTitle} numberOfLines={0}>
-        Suggested Inquiry Telemetries
+        {t('tab.assistant')} Prompts
       </Text>
       <Text style={styles.headerSubtitle} numberOfLines={0}>
         Select a query parameter below to query the AI Climate Engine
       </Text>
 
       <View style={[styles.grid, numColumns === 2 && styles.gridTablet]}>
-        {SUGGESTED_PROMPTS.map((prompt, idx) => (
+        {prompts.map((prompt, idx) => (
           <Pressable
             key={`prompt-${idx}`}
             onPress={() => onSelectQuery(prompt)}

@@ -119,13 +119,16 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         return 'warning';
       case 'Critical':
       default:
-        return 'danger';
+      case 'Optimal': return 'success';
+      case 'Stable': return 'info';
+      case 'Stressed': return 'warning';
+      case 'Critical': default: return 'danger';
     }
   };
 
   const currentRating = getRatingLabel(healthScore);
+  const { userRole, t } = useApp();
 
-  // Generate dynamic AI Insights based on year/horizon
   const getAIInsights = () => {
     if (timeHorizon === 'past24h') {
       return {
@@ -148,7 +151,6 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         actions: `Reinforce sea walls (if coastal), upgrade crop irrigation efficiency, and declare dry-well mitigation reserves.`,
       };
     }
-    // Now (Default)
     return {
       summary: `Real-time sensor arrays report stable operations in ${district.name}. Active air currents dispersing thermal buildup.`,
       assessment: `Environmental indices are ${currentRating.toUpperCase()}. Risk footprint remains nominal.`,
@@ -156,23 +158,21 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
     };
   };
 
-  const aiInsights = getAIInsights();
   const isCoastal = district.region === 'Coastal';
 
-  // Generate Smart Advisory Cards based on District telemetry
   const getSmartAdvisories = () => {
     const advisories = [];
     
     if (rainfall > 8) {
       advisories.push({
-        title: 'Rain Expected',
-        description: `Heavy precipitation of ${rainfall.toFixed(1)}mm expected. Secure stormwater paths.`,
+        title: t('advisory.rain_tomorrow'),
+        description: t('advisory.detail.rain_tomorrow'),
         type: 'rain' as const,
         priority: 'High' as const,
       });
       advisories.push({
-        title: 'Delay Irrigation',
-        description: 'Sufficient moisture inflow predicted. Halt irrigation to preserve soil aeration.',
+        title: t('advisory.delay_irrigation'),
+        description: t('advisory.detail.delay_irrigation'),
         type: 'irrigation' as const,
         priority: 'Moderate' as const,
       });
@@ -187,8 +187,8 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
 
     if (temp > 35) {
       advisories.push({
-        title: 'Avoid Outdoor Work',
-        description: `Extreme heat advisory (${temp.toFixed(1)}°C). Limit labor between 11:00 AM and 04:00 PM.`,
+        title: t('advisory.avoid_outdoor'),
+        description: t('advisory.detail.avoid_outdoor'),
         type: 'work' as const,
         priority: 'Severe' as const,
       });
@@ -196,8 +196,8 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
 
     if (district.windSpeed > 22) {
       advisories.push({
-        title: 'High Winds Warning',
-        description: `Wind gusts up to ${district.windSpeed} km/h. Secure loose outdoor panels or antennas.`,
+        title: t('advisory.strong_winds'),
+        description: t('advisory.detail.strong_winds'),
         type: 'wind' as const,
         priority: 'Moderate' as const,
       });
@@ -214,15 +214,14 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         });
       } else {
         advisories.push({
-          title: 'Suitable Fishing Window',
-          description: 'Stable wave contours below 1.5m. Safe navigation clearance in effect.',
+          title: t('advisory.suitable_fishing'),
+          description: t('advisory.detail.suitable_fishing'),
           type: 'fishing' as const,
           priority: 'Low' as const,
         });
       }
     }
 
-    // Default fallback advisory if list is empty
     if (advisories.length === 0) {
       advisories.push({
         title: 'Standard Monitoring',
@@ -235,10 +234,8 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
     return advisories;
   };
 
-  // Generate Climate Readiness checklists based on risks
   const getReadinessChecklists = () => {
     const checklists = [];
-
     const heavyRainRisk = district.disasterRisks.heavyRain.risk;
     const floodRisk = district.disasterRisks.flood.risk;
     const heatwaveRisk = district.disasterRisks.heatwave.risk;
@@ -263,30 +260,80 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
       });
     }
 
-    // Ensure we show at least one checklist card
     if (checklists.length === 0) {
       checklists.push({
         event: 'General Hazard',
         items: ['Sync telemetry GPS links', 'Verify municipal response channels', 'Track Doppler satellite updates'],
       });
     }
-
     return checklists;
   };
 
   const smartAdvisories = getSmartAdvisories();
   const readinessChecklists = getReadinessChecklists();
 
+  const getMockAgricultureProps = () => {
+    const isCoastal = district.region === 'Coastal';
+    return {
+      cropName: isCoastal ? 'Rice Paddy' : district.region === 'West' ? 'Cotton' : 'Millets',
+      suitabilityScore: isCoastal ? 92 : district.region === 'West' ? 84 : 76,
+      irrigationIndex: rainfall > 10 ? 'Rain-Fed Clearance' : 'Micro-Drip Target',
+      season: 'Kharif Monsoons',
+      droughtRisk: (district.disasterRisks.drought.severity) as any,
+      diseaseRisk: (district.disasterRisks.heavyRain.risk > 50 ? 'High' : 'Low') as any,
+      aiFarmingTips: [
+        'Halt surface flooding to prevent root erosion.',
+        'Apply bio-fungicide coverage due to elevated local humidity levels.',
+        'Target seedling transplanting window in the next 48 hours.'
+      ],
+    };
+  };
+
+  const getMockFisheriesProps = () => {
+    const waveHt = district.marineIntelligence?.waveHeight || 1.2;
+    const safety: any = waveHt > 2.2 ? 'Severe' : waveHt > 1.5 ? 'Moderate' : 'Low';
+    return {
+      harbourName: district.name === 'Chennai' ? 'Chennai Harbour' : `${district.name} Coastal Basin`,
+      suitability: (waveHt > 2.2 ? 'Hazardous' : waveHt > 1.5 ? 'Restricted' : 'Excellent') as any,
+      safeWindow: waveHt > 2.2 ? 'NO CLEAR WINDOW' : '05:00 AM - 02:00 PM',
+      tripRiskScore: Math.round(waveHt * 28),
+      safetyIndex: safety,
+      waveStatus: `${waveHt.toFixed(1)}m swell height - ${district.marineIntelligence?.oceanCurrent || 'SSE Flow'}`,
+      advisoryText: waveHt > 2.2 ? 'Halt all deep sea voyages.' : 'Vessels clear for standard operations.',
+      aiTips: [
+        'Avoid coastal shelves due to localized high sea surface warming.',
+        'Monitor Storm Surge warnings on MHEWS dashboard.',
+        'Optimal fish school density identified 12 nautical miles offshore.'
+      ],
+    };
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* 1. Main Telemetry Dashboard */}
+      
+      {userRole === 'Farmer' && (
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>{t('role.farmer')}</Text>
+          <AgricultureCard {...getMockAgricultureProps()} />
+        </View>
+      )}
+
+      {userRole === 'Fisher' && isCoastal && (
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>{t('role.fisher')}</Text>
+          <FisheriesCard {...getMockFisheriesProps()} />
+        </View>
+      )}
+
       <GlassCard style={styles.mainCard}>
-        {/* Panel Header */}
         <View style={styles.header}>
           <View style={styles.titleColumn}>
-            <Text style={styles.titleText} numberOfLines={0}>
-              {district.name} Telemetry
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.titleText} numberOfLines={0}>
+                {district.name} Telemetry
+              </Text>
+              <VoiceSpeakerButton textToRead={`${district.name} Environmental Health Score is ${healthScore} out of 100. Current weather is ${district.condition}.`} />
+            </View>
             <Text style={styles.subtitleText} numberOfLines={0}>
               Sensory readout ({district.region} District, Tamil Nadu)
             </Text>
@@ -297,16 +344,15 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           />
         </View>
 
-        {/* Climate Diagnostics Grid */}
-        <Text style={styles.sectionTitle} numberOfLines={0}>ATMOSPHERIC DIAGNOSTICS</Text>
+        <Text style={styles.sectionTitle}>ATMOSPHERIC DIAGNOSTICS</Text>
         <View style={styles.metricsGrid}>
           <View style={styles.item}>
             <Thermometer size={15} color={COLORS.primary} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Temperature</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.temp')}</Text>
               <View style={styles.valueRow}>
                 <AnimatedNumber value={temp} style={styles.value} suffix="°C" />
-                <Text style={styles.subtext} numberOfLines={0}>Feels: {feelsLike.toFixed(0)}°</Text>
+                <Text style={styles.subtext} numberOfLines={0}>{t('details.feels')}: {feelsLike.toFixed(0)}°</Text>
               </View>
             </View>
           </View>
@@ -314,7 +360,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           <View style={styles.item}>
             <Droplet size={15} color={COLORS.secondary} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Humidity</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.humidity')}</Text>
               <View style={styles.valueRow}>
                 <AnimatedNumber value={humidity} style={styles.value} suffix="%" />
                 <Text style={styles.subtext} numberOfLines={0}>Saturated</Text>
@@ -325,7 +371,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           <View style={styles.item}>
             <Droplet size={15} color={COLORS.primary} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Rainfall</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.rainfall')}</Text>
               <View style={styles.valueRow}>
                 <AnimatedNumber value={rainfall} style={styles.value} suffix=" mm" decimals={1} />
                 <Text style={styles.subtext} numberOfLines={0}>Precipitation</Text>
@@ -336,7 +382,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           <View style={styles.item}>
             <Wind size={15} color={COLORS.accent} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Wind Flow</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.wind')}</Text>
               <View style={styles.valueRow}>
                 <Text style={styles.value} numberOfLines={0}>{district.windSpeed} km/h</Text>
                 <Text style={styles.subtext} numberOfLines={0}>Vector: {district.windDirection}</Text>
@@ -347,7 +393,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           <View style={styles.item}>
             <Compass size={15} color={COLORS.textSecondary} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Pressure</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.pressure')}</Text>
               <View style={styles.valueRow}>
                 <Text style={styles.value} numberOfLines={0}>{district.pressure} hPa</Text>
                 <Text style={styles.subtext} numberOfLines={0}>Barometric</Text>
@@ -358,7 +404,7 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           <View style={styles.item}>
             <Eye size={15} color={COLORS.success} />
             <View style={styles.textWrapper}>
-              <Text style={styles.label} numberOfLines={0}>Visibility</Text>
+              <Text style={styles.label} numberOfLines={0}>{t('details.visibility')}</Text>
               <View style={styles.valueRow}>
                 <Text style={styles.value} numberOfLines={0}>{visibility} km</Text>
                 <Text style={styles.subtext} numberOfLines={0}>Visual clearance</Text>
@@ -367,11 +413,10 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
           </View>
         </View>
 
-        {/* Environmental Indexing */}
-        <Text style={styles.sectionTitle} numberOfLines={0}>ENVIRONMENTAL HEALTH INDICES</Text>
+        <Text style={styles.sectionTitle}>ENVIRONMENTAL HEALTH INDICES</Text>
         <View style={styles.healthRow}>
           <View style={styles.scoreGauge}>
-            <Text style={styles.gaugeLabel} numberOfLines={0}>ENV HEALTH SCORE</Text>
+            <Text style={styles.gaugeLabel} numberOfLines={0}>{t('details.health_score')}</Text>
             <View style={styles.gaugeValueRow}>
               <AnimatedNumber value={healthScore} style={styles.gaugeVal} />
               <Text style={styles.gaugeTotal} numberOfLines={0}>/100</Text>
@@ -382,14 +427,14 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
             <View style={styles.miniItem}>
               <TrendingUp size={14} color={COLORS.primary} />
               <View style={styles.miniText}>
-                <Text style={styles.miniLabel} numberOfLines={0}>Climate Risk Index</Text>
+                <Text style={styles.miniLabel} numberOfLines={0}>{t('details.risk_score')}</Text>
                 <Text style={styles.miniValue} numberOfLines={0}>{climateRiskIndex}% Risk</Text>
               </View>
             </View>
             <View style={styles.miniItem}>
               <Sun size={14} color={COLORS.danger} />
               <View style={styles.miniText}>
-                <Text style={styles.miniLabel} numberOfLines={0}>UV Radiation</Text>
+                <Text style={styles.miniLabel} numberOfLines={0}>{t('details.uv')}</Text>
                 <Text style={styles.miniValue} numberOfLines={0}>{uvIndex} UVI</Text>
               </View>
             </View>
@@ -397,10 +442,9 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         </View>
       </GlassCard>
 
-      {/* 2. Premium Marine Intelligence (Coastal Districts Only) */}
-      {isCoastal && district.marineIntelligence && (
+      {isCoastal && district.marineIntelligence && userRole !== 'Fisher' && (
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle} numberOfLines={0}>MARINE INTELLIGENCE</Text>
+          <Text style={styles.sectionTitle}>{t('details.coastal_warning')}</Text>
           <MarineCard 
             districtName={district.name} 
             marineData={{
@@ -411,9 +455,8 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         </View>
       )}
 
-      {/* 3. District Smart Advisory Section */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle} numberOfLines={0}>DISTRICT SMART ADVISORY</Text>
+        <Text style={styles.sectionTitle}>{t('tab.analytics')}</Text>
         {smartAdvisories.map((adv, idx) => (
           <RecommendationCard
             key={`adv-${idx}`}
@@ -425,9 +468,8 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         ))}
       </View>
 
-      {/* 4. Climate Readiness Checklist Cards */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle} numberOfLines={0}>CLIMATE READINESS PLAN</Text>
+        <Text style={styles.sectionTitle}>CLIMATE READINESS PLAN</Text>
         {readinessChecklists.map((chk, idx) => (
           <ChecklistCard
             key={`chk-${idx}`}
@@ -437,42 +479,48 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         ))}
       </View>
 
-      {/* 5. AI Climate Insights Card */}
       <GlassCard style={styles.aiInsightsCard}>
         <View style={styles.cardHeader}>
           <Cpu size={16} color={COLORS.primary} />
           <Text style={styles.cardHeaderTitle} numberOfLines={0}>
-            AI MODEL EXPLANATORY REASONINGS
+            {t('ai.insights.title')}
+          </Text>
+          <VoiceSpeakerButton textToRead={`${t('ai.insights.title')}: Flood risk is high due to ${t('ai.reason.flood')}.`} />
+        </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 11, fontWeight: 'bold', color: COLORS.textPrimary }}>
+              Flood Risk Assessment
+            </Text>
+            <TrafficLightBadge severity={district.disasterRisks.flood.risk > 65 ? 'High' : 'Moderate'} size="sm" />
+          </View>
+          <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 10, color: COLORS.textSecondary, lineHeight: 14 }}>
+            • {t('ai.reason.flood')}
           </Text>
         </View>
 
-        <View style={styles.insightItem}>
-          <View style={styles.insightLabelRow}>
-            <Info size={12} color={COLORS.textSecondary} />
-            <Text style={styles.insightLabel} numberOfLines={0}>SIMULATION SUMMARY</Text>
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 11, fontWeight: 'bold', color: COLORS.textPrimary }}>
+              Cyclone Intensity
+            </Text>
+            <TrafficLightBadge severity={district.disasterRisks.cyclone.risk > 60 ? 'High' : 'Low'} size="sm" />
           </View>
-          <Text style={styles.insightText} numberOfLines={0}>
-            {aiInsights.summary}
+          <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 10, color: COLORS.textSecondary, lineHeight: 14 }}>
+            • {t('ai.reason.cyclone')}
           </Text>
         </View>
 
-        <View style={styles.insightItem}>
-          <View style={styles.insightLabelRow}>
-            <ShieldAlert size={12} color={COLORS.warning} />
-            <Text style={styles.insightLabel} numberOfLines={0}>RISK ASSESSMENT</Text>
+        <View style={{ marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 11, fontWeight: 'bold', color: COLORS.textPrimary }}>
+              Heatwave Threat
+            </Text>
+            <TrafficLightBadge severity={district.disasterRisks.heatwave.risk > 65 ? 'High' : 'Moderate'} size="sm" />
           </View>
-          <Text style={styles.insightText} numberOfLines={0}>
-            {aiInsights.assessment}
-          </Text>
-        </View>
-
-        <View style={styles.insightItem}>
-          <View style={styles.insightLabelRow}>
-            <Zap size={12} color={COLORS.success} />
-            <Text style={styles.insightLabel} numberOfLines={0}>RECOMMENDED ACTIONS</Text>
-          </View>
-          <Text style={styles.insightText} numberOfLines={0}>
-            {aiInsights.actions}
+          <Text style={{ fontFamily: TYPOGRAPHY.fontFamily, fontSize: 10, color: COLORS.textSecondary, lineHeight: 14 }}>
+            • {t('ai.reason.heatwave')}
           </Text>
         </View>
 
@@ -482,7 +530,6 @@ export const DistrictDetailsPanel: React.FC<DistrictDetailsPanelProps> = ({
         </View>
       </GlassCard>
 
-      {/* Spacing for Tab Capsule scroll safety */}
       <View style={{ height: 40 }} />
     </ScrollView>
   );

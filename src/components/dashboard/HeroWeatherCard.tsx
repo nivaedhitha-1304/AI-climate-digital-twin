@@ -22,6 +22,7 @@ import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 import { GlassCard } from '../common/GlassCard';
 import { StatusBadge } from '../common/StatusBadge';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { useApp } from '../../context/AppContext';
 
 // Custom Reanimated weather animation helper
 const AnimatedWeatherVisual: React.FC = () => {
@@ -98,13 +99,14 @@ const AnimatedWeatherVisual: React.FC = () => {
 export const HeroWeatherCard: React.FC = () => {
   const { width } = useWindowDimensions();
   const isTablet = width > 768;
+  const { t } = useApp();
 
   return (
     <View style={styles.outerContainer}>
       <GlassCard style={styles.cardContainer}>
         {/* Top Badges & Updated Status */}
         <View style={styles.metaRow}>
-          <StatusBadge type="live" label="Live Telemetry" />
+          <StatusBadge type="live" label={t('timeline.now')} />
           <Text style={styles.updatedText} numberOfLines={0}>
             Updated: 2 mins ago
           </Text>
@@ -125,7 +127,7 @@ export const HeroWeatherCard: React.FC = () => {
             </View>
             <View style={styles.feelsLikeRow}>
               <Text style={styles.feelsLikeText} numberOfLines={0}>
-                Feels Like <Text style={styles.boldText}>38°C</Text>
+                {t('details.feels')} <Text style={styles.boldText}>38°C</Text>
               </Text>
               <Text style={styles.highLowText} numberOfLines={0}>
                 H: 34°C • L: 25°C
@@ -145,7 +147,7 @@ export const HeroWeatherCard: React.FC = () => {
           <View style={styles.paramItem}>
             <Droplets size={18} color={COLORS.secondary} />
             <View style={styles.paramLabelColumn}>
-              <Text style={styles.paramLabel} numberOfLines={0}>Humidity</Text>
+              <Text style={styles.paramLabel} numberOfLines={0}>{t('details.humidity')}</Text>
               <Text style={styles.paramValue} numberOfLines={0}>75%</Text>
             </View>
           </View>
@@ -153,7 +155,7 @@ export const HeroWeatherCard: React.FC = () => {
           <View style={styles.paramItem}>
             <Wind size={18} color={COLORS.secondary} />
             <View style={styles.paramLabelColumn}>
-              <Text style={styles.paramLabel} numberOfLines={0}>Wind Speed</Text>
+              <Text style={styles.paramLabel} numberOfLines={0}>{t('details.wind')}</Text>
               <Text style={styles.paramValue} numberOfLines={0}>22 km/h</Text>
             </View>
           </View>
@@ -161,7 +163,7 @@ export const HeroWeatherCard: React.FC = () => {
           <View style={styles.paramItem}>
             <Compass size={18} color={COLORS.secondary} />
             <View style={styles.paramLabelColumn}>
-              <Text style={styles.paramLabel} numberOfLines={0}>Pressure</Text>
+              <Text style={styles.paramLabel} numberOfLines={0}>{t('details.pressure')}</Text>
               <Text style={styles.paramValue} numberOfLines={0}>1008 hPa</Text>
             </View>
           </View>
@@ -170,26 +172,26 @@ export const HeroWeatherCard: React.FC = () => {
         {/* Secondary Parameters Row */}
         <View style={styles.secondaryRow}>
           <View style={styles.secItem}>
-            <Text style={styles.secLabel} numberOfLines={0}>AQI Index</Text>
+            <Text style={styles.secLabel} numberOfLines={0}>{t('details.aqi')}</Text>
             <View style={styles.badgeWrapper}>
               <Text style={[styles.secValue, { color: COLORS.warning }]} numberOfLines={0}>94</Text>
-              <Text style={styles.secSubtext} numberOfLines={0}>Moderate</Text>
+              <Text style={styles.secSubtext} numberOfLines={0}>Mod</Text>
             </View>
           </View>
           
           <View style={styles.secItem}>
-            <Text style={styles.secLabel} numberOfLines={0}>UV Radiation</Text>
+            <Text style={styles.secLabel} numberOfLines={0}>{t('details.uv')}</Text>
             <View style={styles.badgeWrapper}>
               <Text style={[styles.secValue, { color: COLORS.danger }]} numberOfLines={0}>10</Text>
-              <Text style={styles.secSubtext} numberOfLines={0}>Very High</Text>
+              <Text style={styles.secSubtext} numberOfLines={0}>High</Text>
             </View>
           </View>
 
           <View style={styles.secItem}>
-            <Text style={styles.secLabel} numberOfLines={0}>Precip Prob</Text>
+            <Text style={styles.secLabel} numberOfLines={0}>{t('details.visibility')}</Text>
             <View style={styles.badgeWrapper}>
-              <Text style={[styles.secValue, { color: COLORS.primary }]} numberOfLines={0}>80%</Text>
-              <Text style={styles.secSubtext} numberOfLines={0}>Showers</Text>
+              <Text style={[styles.secValue, { color: COLORS.success }]} numberOfLines={0}>9.5</Text>
+              <Text style={styles.secSubtext} numberOfLines={0}>km</Text>
             </View>
           </View>
         </View>

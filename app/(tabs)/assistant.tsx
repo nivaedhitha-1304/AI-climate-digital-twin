@@ -7,9 +7,10 @@ import { ChatBubbles, Message } from '../../src/components/assistant/ChatBubbles
 import { SuggestedQueries } from '../../src/components/assistant/SuggestedQueries';
 import { ChatInput } from '../../src/components/assistant/ChatInput';
 import { ALL_38_DISTRICTS, DistrictClimateData, generateDynamicAIResponse } from '../../src/mock/climateMock';
+import { useApp } from '../../src/context/AppContext';
 
 export default function AssistantScreen() {
-  const [selectedDistrict, setSelectedDistrict] = useState<DistrictClimateData | null>(null);
+  const { selectedDistrict, setSelectedDistrict, t } = useApp();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'm-init',
@@ -107,7 +108,7 @@ export default function AssistantScreen() {
           <View style={styles.titleWrapper}>
             <Cpu size={22} color={COLORS.primary} />
             <Text style={styles.titleText} numberOfLines={0}>
-              AI Climate Assistant
+              {t('tab.assistant')}
             </Text>
           </View>
           <Text style={styles.subtitleText} numberOfLines={0}>

@@ -5,8 +5,11 @@ import { Settings } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../src/theme';
 import { ProfileHeader } from '../../src/components/profile/ProfileHeader';
 import { SettingsGrid } from '../../src/components/profile/SettingsGrid';
+import { useApp } from '../../src/context/AppContext';
 
 export default function ProfileScreen() {
+  const { t } = useApp();
+
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
@@ -19,7 +22,7 @@ export default function ProfileScreen() {
           <View style={styles.titleWrapper}>
             <Settings size={22} color={COLORS.primary} />
             <Text style={styles.titleText} numberOfLines={0}>
-              Specialist Profile
+              {t('tab.profile')}
             </Text>
           </View>
           <Text style={styles.subtitleText} numberOfLines={0}>
